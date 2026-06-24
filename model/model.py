@@ -52,7 +52,6 @@ class Model:
     def getCompConn(self):
         return sorted(nx.connected_components(self._grafo), key=len, reverse=True)
 
-
     def getCamminoOttimo(self):
         self._bestCammino = []
         self._bestSottocomponenti = float('inf')
@@ -64,7 +63,7 @@ class Model:
             #condizione di inserimento nella lista
             if c.Essential != '?':
                 parziale = [c]
-                self._ricorsione(parziale, lista, l + 1)
+                self._ricorsione(parziale, lista, (l + 1))
 
         return self._bestCammino, self._bestSottocomponenti
 
@@ -93,10 +92,10 @@ class Model:
 
         self._ricorsione(parziale, lista, livello + 1)
 
-
     def _peso(self, parziale):
         grafo = self._grafo.subgraph(parziale)
         return nx.number_connected_components(grafo)
+
 
     def get_list_nodes(self):
         self._bestListNodes = []
@@ -116,7 +115,7 @@ class Model:
         print(self._bestLen, self._bestScore)
         return self._bestListNodes, self._bestLen, self._bestScore
 
-    def _ricorsione(self, parziale, rimanenti):
+    '''def _ricorsione(self, parziale, rimanenti):
         if len(parziale) > self._bestLen:
             self._bestLen = len(parziale)
             self._bestScore = self._getScore(parziale)
@@ -139,3 +138,4 @@ class Model:
 
     def _getScore(self, parziale):
         return nx.number_connected_components(self._grafo.subgraph(parziale))
+'''

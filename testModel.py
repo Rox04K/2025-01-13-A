@@ -24,7 +24,7 @@ for c in compConn:
         print(f'{stringa} | dimensione componente = {len(c)}')
 
 print()
-cammino, lun, sottocomponenti = model.get_list_nodes()
+cammino, sottocomponenti = model.getCamminoOttimo()
 print(f'Il cammino ottimo è lungo {lun} ed ha {sottocomponenti} componenti connesse')
 for s in cammino:
     print(f'{s}')
