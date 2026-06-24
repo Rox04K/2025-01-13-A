@@ -44,11 +44,17 @@ class Controller:
             if len(c) > 1:
                 stringa = ''
                 for n in c:
-                    stringa += f'{n.GeneID}, '
+                    stringa += f'{n}, '
                 self._view.txt_result.controls.append(ft.Text(f'{stringa} | dimensione componente = {len(c)}'))
 
         self._view.update_page()
 
     def handle_path(self, e):
-        pass
+        self._view.txt_result.controls.clear()
+        cammino, sottocomponenti = self._model.getCamminoOttimo()
+        self._view.txt_result.controls.append(ft.Text(f'Il cammino ottimo è lungo {len(cammino)} ed ha {sottocomponenti} componenti connesse'))
+        for s in cammino:
+            self._view.txt_result.controls.append(ft.Text(s))
+
+        self._view.update_page()
 

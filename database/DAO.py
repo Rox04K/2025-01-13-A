@@ -34,9 +34,10 @@ class DAO():
             print("Connessione fallita")
         else:
             cursor = cnx.cursor(dictionary=True)
-            query = """select *
-                        FROM classification c 
-                        where Localization = %s
+            query = """select g.GeneID , c.Localization , g.Essential 
+                        from genes g , classification c 
+                        where g.GeneID = c.GeneID
+                        and c.Localization = %s
                                                """
             cursor.execute(query, (localizzazione,))
 

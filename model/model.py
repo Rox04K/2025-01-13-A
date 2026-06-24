@@ -9,24 +9,15 @@ class Model:
 
         # impostazione della ricorsione
         self._bestCammino = []
-        self._bestLunghezza = 0
-
-    '''Comunicazione con il DAO. Quando chiamato dal controller, prende il necessario dal DAO.
-       Se serve può farci dei lavori sopra (es. ordinamenti o filtri) per poi restituirlo al controller
-       che andrà a riempire i dropdown o mostrare dei valori. 
-    '''
+        self._bestSottocomponenti = float('inf')
 
     def getLocalizzazione(self):
         return DAO.getLocalization()
 
-    ''' OPERAZIONI SUI GRAFI '''
-
     def creaGrafo(self, localizzazione):
-        # Come prima cosa bisogna pulire il grafo per poterlo ricreare senza dati vecchi
         self._grafo.clear()
         self._IDMap = {}
 
-        # Poi bisogna prendere i nodi e aggiungerli sia al grafo che all'id map
         nodi = DAO.getNodi(localizzazione)
         self._grafo.add_nodes_from(nodi)
         for n in nodi:
@@ -62,23 +53,89 @@ class Model:
         return sorted(nx.connected_components(self._grafo), key=len, reverse=True)
 
 
-    ''' METODO DI RICORSIONE '''
-
-    def getCammino(self):
-        # Prima di tutto bisogna reimpostare i valori della ricorsione a 0 perchè così non salviamo valori vecchi
+    def getCamminoOttimo(self):
         self._bestCammino = []
-        self._bestLunghezza = 0
+        self._bestSottocomponenti = float('inf')
 
-        # Poi prepariamo la base della ricorsione. Ci sono diversi tipi di ricorsione che vengono trattati nella parte apposita
-        parziale = []
+        lista = sorted(self._grafo.nodes(), key=lambda x: x.GeneID)
 
-        for n in self._grafo.nodes():
-            parziale.append(n)
-            self._ricorsione(parziale)
+        for l in range(len(lista) - 1):
+            c = lista[l]
+            #condizione di inserimento nella lista
+            if c.Essential != '?':
+                parziale = [c]
+                self._ricorsione(parziale, lista, l + 1)
+
+        return self._bestCammino, self._bestSottocomponenti
+
+    def _ricorsione(self, parziale, lista, livello):
+
+        if livello == len(lista):
+            if len(parziale) > len(self._bestCammino):
+                pesoAttuale = self._peso(parziale)
+                self._bestCammino = copy.deepcopy(parziale)
+                self._bestSottocomponenti = pesoAttuale
+                return
+            elif len(parziale) == len(self._bestCammino):
+                pesoAttuale = self._peso(parziale)
+                if pesoAttuale < self._bestSottocomponenti:
+                    self._bestCammino = copy.deepcopy(parziale)
+                    self._bestSottocomponenti = pesoAttuale
+                return
+            else:
+                return
+
+        attuale = lista[livello]
+        if attuale.Essential == parziale[-1].Essential:
+            parziale.append(attuale)
+            self._ricorsione(parziale, lista, livello + 1)
             parziale.pop()
 
-        return self._bestCammino, (self._bestLunghezza - 1)
+        self._ricorsione(parziale, lista, livello + 1)
 
-    def _ricorsione(self, parziale):
-        # Qui scriviamo il metodo ricorsivo
-        pass
+
+    def _peso(self, parziale):
+        grafo = self._grafo.subgraph(parziale)
+        return nx.number_connected_components(grafo)
+
+    def get_list_nodes(self):
+        self._bestListNodes = []
+        self._bestScore = len(self._grafo.nodes)
+        self._bestLen = 0
+
+        allNodes = list(self._grafo.nodes)
+        allNodes.sort(key=lambda x: x.GeneID)
+
+        for root in allNodes:
+            rimanenti = copy.deepcopy(allNodes)
+            rimanenti.remove(root)
+            rimanenti = [x for x in rimanenti if x.Essential == root.Essential]
+
+            self._ricorsione([root], list(rimanenti))
+
+        print(self._bestLen, self._bestScore)
+        return self._bestListNodes, self._bestLen, self._bestScore
+
+    def _ricorsione(self, parziale, rimanenti):
+        if len(parziale) > self._bestLen:
+            self._bestLen = len(parziale)
+            self._bestScore = self._getScore(parziale)
+            self._bestListNodes = copy.deepcopy(parziale)
+            if len(parziale) == self._bestLen:
+                if self._getScore(parziale) < self._bestScore:
+                    self._bestScore = self._getScore(parziale)
+                    self._bestListNodes = copy.deepcopy(parziale)
+
+        if len(rimanenti) == 0:
+            return
+
+        for n in rimanenti:
+            if n.GeneID > parziale[-1].GeneID:
+                parziale.append(n)
+                rimanenti.remove(n)
+                self._ricorsione(parziale, rimanenti)
+                parziale.remove(n)
+                rimanenti.append(n)
+
+    def _getScore(self, parziale):
+        return nx.number_connected_components(self._grafo.subgraph(parziale))

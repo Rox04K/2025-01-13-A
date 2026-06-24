@@ -2,7 +2,7 @@ from model.model import Model
 
 model = Model()
 
-model.creaGrafo('vacuole')
+model.creaGrafo('peroxisome')
 
 nodi, archi = model.getInfo()
 print(f'Creato grafo con {nodi} nodi e {archi} archi')
@@ -24,7 +24,7 @@ for c in compConn:
         print(f'{stringa} | dimensione componente = {len(c)}')
 
 print()
-cammino, punteggio = model.getCamminoOttimo()#eventualmente ci possono essere dei parametri
-print(f'Il cammino ottimo ha un punteggio di {punteggio} ed è composto da {len(cammino)} nodi')
+cammino, lun, sottocomponenti = model.get_list_nodes()
+print(f'Il cammino ottimo è lungo {lun} ed ha {sottocomponenti} componenti connesse')
 for s in cammino:
     print(f'{s}')
